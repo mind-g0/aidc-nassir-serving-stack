@@ -20,13 +20,13 @@ week 6 another cohort's agents are calling it.
 
 ## What you add, and when
 
-| Week | Day | What you add |
-|---|---|---|
-| 2 | Mon | `app/` behind an OpenAI-compatible `/v1` on CPU |
-| 2 | Tue | `Dockerfile`, and your image on Docker Hub |
-| 2 | Wed | `Dockerfile.gpu`, the same code on a GPU |
-| 2 | Thu | `compose.yaml`, the stack described rather than run by hand |
-| 3 | Thu | `bench/`, the harness that measures all of it |
+| Week | Day | What you add                                                |
+| ---- | --- | ----------------------------------------------------------- |
+| 2    | Mon | `app/` behind an OpenAI-compatible `/v1` on CPU             |
+| 2    | Tue | `Dockerfile`, and your image on Docker Hub                  |
+| 2    | Wed | `Dockerfile.gpu`, the same code on a GPU                    |
+| 2    | Thu | `compose.yaml`, the stack described rather than run by hand |
+| 3    | Thu | `bench/`, the harness that measures all of it               |
 
 Each one is a lab, and each one starts from files that day hands you. Lab
 instructions, decks and quizzes are on the course Drive, one folder per week.
@@ -41,9 +41,14 @@ This repository is your code.
 Then read `setup.md`. It is short, and it covers the two things that go wrong:
 committing a key, and committing a model.
 
-## Build & Run
+## Build
+
 ```bash
 docker build -t aidc-nassir-serving-stack .
-docker run -p 8000:8000 --env-file aidc-nassir-serving-stack/.env --mount type=bind,source=/home/nassir/aidc-bootcamp/models/Qwen2.5-0.5B-Instruct,target=/model
- --name aidc-nassir-serving-stack aidc-nassir-serving-stack
+```
+
+## Run
+
+```bash
+docker run --rm -p 8000:8000 --env-file aidc-nassir-serving-stack/.env  --mount type=bind,source=/home/nassir/aidc-bootcamp/models/Qwen2.5-0.5B-Instruct,target=/model,readonly mindg/ai-serve-stack
 ```
