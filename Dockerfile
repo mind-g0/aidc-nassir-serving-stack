@@ -8,8 +8,10 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
+RUN pip install --no-cache-dir \
+    --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple \
+    -r requirements.txt
+    
 # Copy the project
 COPY . .
 
