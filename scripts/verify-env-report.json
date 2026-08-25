@@ -1,0 +1,32 @@
+{
+  "tool": "aidc-verify-env",
+  "version": "1.0",
+  "generated_utc": "2026-08-24T10:40:20Z",
+  "student": "nassir",
+  "platform": "Linux x86_64",
+  "result": "PASS WITH WARNINGS",
+  "blocking": 0,
+  "warnings": 1,
+  "checks": [
+    {"check": "platform", "status": "pass", "detail": "Linux x86_64"},
+    {"check": "cpu architecture", "status": "pass", "detail": "x86_64"},
+    {"check": "memory", "status": "warn", "detail": "7.4 GB total; 8 GB is comfortable, expect slow CPU labs"},
+    {"check": "disk space", "status": "pass", "detail": "551.2 GB free here"},
+    {"check": "curl", "status": "pass", "detail": "curl 8.5.0"},
+    {"check": "git", "status": "pass", "detail": "2.43.0"},
+    {"check": "git identity", "status": "pass", "detail": "Nassir Abusaroor <n.abusaroor@gmail.com>"},
+    {"check": "ssh key", "status": "pass", "detail": "a public key exists in ~/.ssh"},
+    {"check": "python 3", "status": "pass", "detail": "3.12.3 at /home/nassir/aidc-bootcamp/.venv/bin/python3"},
+    {"check": "venv and pip", "status": "pass", "detail": "a virtual environment was created and pip works inside it"},
+    {"check": "docker client", "status": "pass", "detail": "Docker version 29.1.3"},
+    {"check": "docker daemon", "status": "pass", "detail": "reachable, server 29.1.3"},
+    {"check": "docker compose", "status": "pass", "detail": "2.40.3+ds1-0ubuntu1~24.04.1"},
+    {"check": "docker run", "status": "pass", "detail": "hello-world ran and exited cleanly"},
+    {"check": "docker hub login", "status": "pass", "detail": "logged in as mindg"},
+    {"check": "base image (cpu)", "status": "pass", "detail": "python:3.11-slim is local"},
+    {"check": "base image (cuda)", "status": "pass", "detail": "nvidia/cuda:12.4.1-runtime-ubuntu22.04 is local"},
+    {"check": "port 8000", "status": "pass", "detail": "free"},
+    {"check": "reach docker hub", "status": "pass", "detail": "registry-1.docker.io answered"},
+    {"check": "reach hugging face", "status": "pass", "detail": "the week-2 model is reachable"}
+  ]
+}
