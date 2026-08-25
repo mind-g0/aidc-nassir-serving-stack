@@ -40,3 +40,10 @@ This repository is your code.
 
 Then read `setup.md`. It is short, and it covers the two things that go wrong:
 committing a key, and committing a model.
+
+## Build & Run
+```bash
+docker build -t aidc-nassir-serving-stack .
+docker run -p 8000:8000 --env-file aidc-nassir-serving-stack/.env --mount type=bind,source=/home/nassir/aidc-bootcamp/models/Qwen2.5-0.5B-Instruct,target=/model
+ --name aidc-nassir-serving-stack aidc-nassir-serving-stack
+```
