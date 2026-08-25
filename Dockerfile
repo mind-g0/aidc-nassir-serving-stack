@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir \
     --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple \
     -r requirements.txt
-    
+
 # Copy the project
 COPY . .
 
@@ -19,4 +19,4 @@ COPY . .
 EXPOSE 8000
 
 # Start the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]`
