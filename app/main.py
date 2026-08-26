@@ -21,7 +21,7 @@ from app.schemas import (
     Usage,
 )
 
-MODEL_ID = os.environ.get("MODEL_ID", "Qwen2.5-0.5B-Instruct")
+MODEL_ID = os.environ.get("MODEL_ID")
 
 MODEL_PATH = os.environ.get("MODEL_PATH")
 
