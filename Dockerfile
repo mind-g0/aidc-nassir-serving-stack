@@ -19,9 +19,10 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements.txt
 COPY requirements.txt .
 
-# Install dependencies using uv
+# Install PyTorch with CUDA 12.4 support first, then install remaining dependencies
 # --system flag is required because uv prevents installing into the system Python by default
-RUN uv pip install --system --no-cache -r requirements.txt
+RUN uv pip install --system --no-cache --retries 5 --timeout 300 torch==2.5.* --index-url https://download.pytorch.org/whl/cu124 && \
+    uv pip install --system --no-cache -r requirements.txt
 
 # Copy the project
 COPY . .
