@@ -44,10 +44,14 @@ committing a key, and committing a model.
 ## Build
 
 ```bash
-docker build -t aidc-nassir-serving-stack .
+docker build -t mindg/ai-serve-stack .
 ```
 
 ## Run
+
+- we can delete --rm and use -d to run the container in the background
+- change **/home/nassir/aidc-bootcamp/models/Qwen2.5-0.5B-Instruct** to you model path
+- change **mindg/ai-serve-stack** to your image name
 
 ```bash
 docker run --rm -p 8000:8000 --env-file aidc-nassir-serving-stack/.env  --mount type=bind,source=/home/nassir/aidc-bootcamp/models/Qwen2.5-0.5B-Instruct,target=/model,readonly mindg/ai-serve-stack
