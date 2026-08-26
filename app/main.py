@@ -38,11 +38,10 @@ model = AutoModelForCausalLM.from_pretrained(
     token=HF_TOKEN,
     device_map=DEVICE,  # This replaces the need for model.to(DEVICE)
 )
+app = FastAPI(title="serving-stack", version="wk2")
 
 model.eval()
 print("Model ready")
-
-app = FastAPI(title="serving-stack", version="wk2")
 
 
 @app.get("/health", response_model=HealthResponse)
