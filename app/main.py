@@ -24,15 +24,12 @@ from app.schemas import (
 load_dotenv()
 
 MODEL_ID = os.environ.get("MODEL_ID")
-
 MODEL_PATH = os.environ.get("MODEL_PATH")
-
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 HF_TOKEN = os.environ.get("API_KEY")
-
-app = FastAPI(title="serving-stack", version="wk2")
-
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {DEVICE} for model inference...")
+
+
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, token=HF_TOKEN)
 
 # Use device_map to load the model directly to the correct device
@@ -44,6 +41,8 @@ model = AutoModelForCausalLM.from_pretrained(
 
 model.eval()
 print("Model ready")
+
+app = FastAPI(title="serving-stack", version="wk2")
 
 
 @app.get("/health", response_model=HealthResponse)
