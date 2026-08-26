@@ -4,12 +4,12 @@ import json
 import os
 import time
 import uuid
-
+import torch.cuda
 import torch
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from transformers import AutoModelForCausalLM, AutoTokenizer
-
+from dotenv import load_dotenv
 from app.schemas import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -21,23 +21,28 @@ from app.schemas import (
     Usage,
 )
 
+load_dotenv()
+
 MODEL_ID = os.environ.get("MODEL_ID")
 
 MODEL_PATH = os.environ.get("MODEL_PATH")
 
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+HF_TOKEN = os.environ.get("API_KEY")
+
 app = FastAPI(title="serving-stack", version="wk2")
 
-print(f"Loading {MODEL_ID} from {MODEL_PATH} on CPU...")
+print(f"Using {DEVICE} for model inference...")
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, token=HF_TOKEN)
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-
+# Use device_map to load the model directly to the correct device
 model = AutoModelForCausalLM.from_pretrained(
-    MODEL_PATH, torch_dtype=torch.float32
+    MODEL_PATH,
+    token=HF_TOKEN,
+    device_map=DEVICE,  # This replaces the need for model.to(DEVICE)
 )
 
-model.to("cpu")
 model.eval()
-
 print("Model ready")
 
 
@@ -65,7 +70,7 @@ def _build_inputs(req: ChatCompletionRequest):
         return_dict=True,
     )
 
-    input_ids = inputs["input_ids"]
+    input_ids = inputs["input_ids"].to(DEVICE)
 
     return input_ids, input_ids.shape[1]
 
