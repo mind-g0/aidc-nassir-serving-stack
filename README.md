@@ -47,7 +47,7 @@ committing a key, and committing a model.
 docker build -t mindg/ai-serve-stack .
 ```
 
-## Run
+## Run with local mount storage
 
 - we can delete --rm and use -d to run the container in the background
 - change **/home/nassir/aidc-bootcamp/models/Qwen2.5-0.5B-Instruct** to you model path
@@ -55,4 +55,14 @@ docker build -t mindg/ai-serve-stack .
 
 ```bash
 docker run --rm -p 8000:8000 --env-file aidc-nassir-serving-stack/.env  --mount type=bind,source=/home/nassir/aidc-bootcamp/models/Qwen2.5-0.5B-Instruct,target=/model,readonly mindg/ai-serve-stack
+```
+
+## Run with named volume storage
+
+- we can delete --rm and use -d to run the container in the background
+- change **ai-models** to your volume name 
+- change **mindg/ai-serve-stack** to your image name
+
+```bash
+docker run --rm -p 8000:8000 --env-file aidc-nassir-serving-stack/.env -v ai-models:/app/.cache/huggingface mindg/ai-serve-stack
 ```
