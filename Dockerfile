@@ -4,6 +4,10 @@ FROM python:3.12-slim
 # Copy the uv binary from the official image
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+# Set up Hugging Face cache
+ENV HF_HOME=/app/.cache/huggingface
+RUN mkdir -p $HF_HOME 
+
 # Set working directory
 WORKDIR /app
 
