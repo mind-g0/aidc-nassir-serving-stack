@@ -1,53 +1,100 @@
 name: Build and Publish Docker Image
 
-# This tells GitHub to run this workflow when code is pushed or merged to main
 on:
   push:
     branches:
       - main
+      - cpu
+      - gpu
+  workflow_dispatch:
+    # Adds a dropdown menu in the GitHub Actions UI for manual runs
+    inputs:
+      registry:
+        description: 'Which registry do you want to push to?'
+        required: true
+        default: 'ghcr'
+        type: choice
+        options:
+          - ghcr
+          - dockerhub
+          - both
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # 🛠️ --- CENTRAL CONFIGURATION --- 🛠️
+  # 1. Default target for automatic pushes (options: ghcr, dockerhub, both)
+  DEFAULT_PUSH_REGISTRY: 'dockerhub'
+  
+  # 2. Define the base image names for both registries
+  GHCR_IMAGE_NAME: ghcr.io/${{ github.repository }}
+  DOCKERHUB_IMAGE_NAME: mindg/ai-serve-stack # ⚠️ UPDATE THIS!
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    # These permissions allow GitHub Actions to save the image to your repository
     permissions:
       contents: read
       packages: write
 
     steps:
-      - name: Checkout repository
+      - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
+      - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GitHub Container Registry
+      # ⚙️ Determine which registry was selected (Input vs Default Push)
+      - name: ⚙️ Determine Target Registry
+        id: config
+        run: |
+          # Use manual input if available, otherwise fallback to the default env variable
+          TARGET="${{ github.event.inputs.registry || env.DEFAULT_PUSH_REGISTRY }}"
+          echo "Target Registry: $TARGET"
+          
+          if [[ "$TARGET" == "ghcr" || "$TARGET" == "both" ]]; then
+            echo "ghcr=true" >> "$GITHUB_OUTPUT"
+          fi
+          
+          if [[ "$TARGET" == "dockerhub" || "$TARGET" == "both" ]]; then
+            echo "dockerhub=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # 🔑 Conditional Logins based on the previous step
+      - name: 🔑 Log in to GitHub Container Registry (GHCR)
+        if: steps.config.outputs.ghcr == 'true'
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }} # Automatically provided by GitHub!
+          password: ${{ secrets.GITHUB_TOKEN }} 
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: 🔑 Log in to Docker Hub
+        if: steps.config.outputs.dockerhub == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 🏷️ Extract metadata and apply the correct image name(s)
+      - name: 🏷️ Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          # Dynamically adds the image names depending on which registry is active
+          images: |
+            ${{ steps.config.outputs.ghcr == 'true' && env.GHCR_IMAGE_NAME || '' }}
+            ${{ steps.config.outputs.dockerhub == 'true' && env.DOCKERHUB_IMAGE_NAME || '' }}
           tags: |
-            type=raw,value=latest
-            type=sha
+            type=ref,event=branch            
+            type=sha,prefix=${{ github.ref_name }}-
+            type=raw,value=latest,enable=${{ github.ref_name == 'main' }}
 
-      - name: Build and push Docker image
+      # 🚀 Build and Push to whichever registries were selected
+      - name: 🚀 Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Caching makes downloading PyTorch/CUDA much faster on future runs
           cache-from: type=gha
           cache-to: type=gha,mode=max
