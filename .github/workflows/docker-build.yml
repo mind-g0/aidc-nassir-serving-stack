@@ -10,9 +10,9 @@ on:
     # Adds a dropdown menu in the GitHub Actions UI for manual runs
     inputs:
       registry:
-        description: "Which registry do you want to push to?"
+        description: 'Which registry do you want to push to?'
         required: true
-        default: "ghcr"
+        default: 'ghcr'
         type: choice
         options:
           - ghcr
@@ -22,8 +22,8 @@ on:
 env:
   # 🛠️ --- CENTRAL CONFIGURATION --- 🛠️
   # 1. Default target for automatic pushes (options: ghcr, dockerhub, both)
-  DEFAULT_PUSH_REGISTRY: "dockerhub"
-
+  DEFAULT_PUSH_REGISTRY: 'dockerhub'
+  
   # 2. Define the base image names for both registries
   GHCR_IMAGE_NAME: ghcr.io/${{ github.repository }}
   DOCKERHUB_IMAGE_NAME: mindg/ai-serve-stack # ⚠️ UPDATE THIS!
@@ -49,11 +49,11 @@ jobs:
           # Use manual input if available, otherwise fallback to the default env variable
           TARGET="${{ github.event.inputs.registry || env.DEFAULT_PUSH_REGISTRY }}"
           echo "Target Registry: $TARGET"
-
+          
           if [[ "$TARGET" == "ghcr" || "$TARGET" == "both" ]]; then
             echo "ghcr=true" >> "$GITHUB_OUTPUT"
           fi
-
+          
           if [[ "$TARGET" == "dockerhub" || "$TARGET" == "both" ]]; then
             echo "dockerhub=true" >> "$GITHUB_OUTPUT"
           fi
@@ -65,7 +65,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }} 
 
       - name: 🔑 Log in to Docker Hub
         if: steps.config.outputs.dockerhub == 'true'

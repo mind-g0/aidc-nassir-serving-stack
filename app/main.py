@@ -40,6 +40,11 @@ model = AutoModelForCausalLM.from_pretrained(
 )
 app = FastAPI(title="serving-stack", version="wk2")
 
+
+REGISTRY_PATH = os.environ.get("REGISTRY_PATH", "/home/nassir/aidc-bootcamp/aidc-nassir-serving-stack/app/registry.json")
+with open(REGISTRY_PATH) as f:
+    REGISTRY = json.load(f)
+
 model.eval()
 print("Model ready")
 
@@ -48,6 +53,15 @@ print("Model ready")
 def health() -> HealthResponse:
     return HealthResponse(status="ok", model=MODEL_ID)
 
+@app.get("/registry")
+def list_models():
+    return {"models": list(REGISTRY.keys())}
+
+@app.get("/registry/{name}")
+def get_model(name: str):
+    if name not in REGISTRY:
+        raise HTTPException(status_code=404, detail=f"no such model: {name}")
+    return REGISTRY[name]
 
 @app.get("/v1/models", response_model=ModelList)
 def list_models() -> ModelList:
@@ -131,6 +145,18 @@ def chat_completions(req: ChatCompletionRequest):
             total_tokens=(prompt_tokens + completion_tokens),
         ),
     )
+
+
+@app.get("/registry")
+def list_models():
+    return {"models": list(REGISTRY.keys())}
+
+
+@app.get("/registry/{name}")
+def get_model(name: str):
+    if name not in REGISTRY:
+        raise HTTPException(status_code=404, detail=f"no such model: {name}")
+    return REGISTRY[name]
 
 
 def _stream(input_ids, prompt_tokens: int, req: ChatCompletionRequest):
