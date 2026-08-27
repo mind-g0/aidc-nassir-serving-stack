@@ -22,7 +22,7 @@ from app.schemas import (
 )
 
 load_dotenv()
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_ID = os.environ.get("MODEL_ID")
 MODEL_PATH = os.environ.get("MODEL_PATH")
 HF_TOKEN = os.environ.get("API_KEY")
@@ -41,7 +41,8 @@ model = AutoModelForCausalLM.from_pretrained(
 app = FastAPI(title="serving-stack", version="wk2")
 
 
-REGISTRY_PATH = os.environ.get("REGISTRY_PATH", "/home/nassir/aidc-bootcamp/aidc-nassir-serving-stack/app/registry.json")
+DEFAULT_REGISTRY = os.path.join(BASE_DIR, "registry.json")
+REGISTRY_PATH = os.environ.get("REGISTRY_PATH", DEFAULT_REGISTRY)
 with open(REGISTRY_PATH) as f:
     REGISTRY = json.load(f)
 

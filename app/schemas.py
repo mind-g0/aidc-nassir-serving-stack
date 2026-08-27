@@ -69,3 +69,7 @@ class ModelList(BaseModel):
 class HealthResponse(BaseModel):
     status: Literal["ok"] = "ok"
     model: str
+
+class CompletionRequest(BaseModel):
+    prompt: str
+    require_gpu: bool = False
