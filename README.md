@@ -66,3 +66,26 @@ docker run --rm -p 8000:8000 --env-file aidc-nassir-serving-stack/.env  --mount 
 ```bash
 docker run --rm -p 8000:8000 --env-file aidc-nassir-serving-stack/.env -v ai-models:/app/.cache/huggingface mindg/ai-serve-stack
 ```
+### last update:
+### API Authentication
+
+The `/v1/chat/completions` route requires API authentication.
+
+Include your API key in the `Authorization` header when making requests.
+
+#### Example
+
+```bash
+curl -H "x-api-key: 86937aa022c3a035556bea0b8d5d2ec8" \
+  -H "Content-Type: application/json" \
+  -X POST http://localhost:8000/v1/chat/completions \
+  -d '{
+    "model": "Qwen/Qwen2.5-0.5B-Instruct",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ],
+    "max_tokens": 50
+  }'
