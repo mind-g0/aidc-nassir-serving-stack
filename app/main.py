@@ -6,10 +6,12 @@ import time
 import uuid
 import torch.cuda
 import torch
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Security, status
+from fastapi.security.api_key import APIKeyHeader
 from fastapi.responses import StreamingResponse
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from dotenv import load_dotenv
+from pathlib import Path
 from app.schemas import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -22,13 +24,13 @@ from app.schemas import (
 )
 
 load_dotenv()
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SERVING_API_KEY = os.environ.get("SERVING_API_KEY")
 MODEL_ID = os.environ.get("MODEL_ID")
 MODEL_PATH = os.environ.get("MODEL_PATH")
 HF_TOKEN = os.environ.get("API_KEY")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {DEVICE} for model inference...")
-
+api_key_header = APIKeyHeader(name="x-api-key", auto_error=False)
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, token=HF_TOKEN)
 
@@ -41,18 +43,39 @@ model = AutoModelForCausalLM.from_pretrained(
 app = FastAPI(title="serving-stack", version="wk2")
 
 
-DEFAULT_REGISTRY = os.path.join(BASE_DIR, "registry.json")
-REGISTRY_PATH = os.environ.get("REGISTRY_PATH", DEFAULT_REGISTRY)
+REGISTRY_PATH = os.environ.get("REGISTRY_PATH", Path(__file__).parent / "registry.json")
 with open(REGISTRY_PATH) as f:
     REGISTRY = json.load(f)
+
 model.eval()
 print("Model ready")
+
+def get_api_key(api_key: str = Security(api_key_header)):
+    expected = os.environ.get("SERVING_API_KEY")
+    if expected is None:
+        raise HTTPException(status_code=500, detail="server API key not configured")
+    if not api_key or api_key != expected:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API Key",
+            headers={"WWW-Authenticate": "API Key"},
+        )
+    return api_key
 
 
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(status="ok", model=MODEL_ID)
 
+@app.get("/registry")
+def list_models():
+    return {"models": list(REGISTRY.keys())}
+
+@app.get("/registry/{name}")
+def get_model(name: str):
+    if name not in REGISTRY:
+        raise HTTPException(status_code=404, detail=f"no such model: {name}")
+    return REGISTRY[name]
 
 @app.get("/registry")
 def list_models():
@@ -105,7 +128,7 @@ def _generate(input_ids, req: ChatCompletionRequest):
 
 
 @app.post("/v1/chat/completions", response_model=None)
-def chat_completions(req: ChatCompletionRequest):
+def chat_completions(req: ChatCompletionRequest, api_key: str = Depends(get_api_key)):
     if req.model != MODEL_ID:
         raise HTTPException(
             status_code=400,
