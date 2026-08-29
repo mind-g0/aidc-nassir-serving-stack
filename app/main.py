@@ -6,10 +6,12 @@ import time
 import uuid
 import torch.cuda
 import torch
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Security, status
+from fastapi.security.api_key import APIKeyHeader
 from fastapi.responses import StreamingResponse
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from dotenv import load_dotenv
+from pathlib import Path
 from app.schemas import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -22,13 +24,13 @@ from app.schemas import (
 )
 
 load_dotenv()
-
+SERVING_API_KEY = os.environ.get("SERVING_API_KEY")
 MODEL_ID = os.environ.get("MODEL_ID")
 MODEL_PATH = os.environ.get("MODEL_PATH")
 HF_TOKEN = os.environ.get("API_KEY")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {DEVICE} for model inference...")
-
+api_key_header = APIKeyHeader(name="x-api-key", auto_error=False)
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, token=HF_TOKEN)
 
@@ -41,12 +43,24 @@ model = AutoModelForCausalLM.from_pretrained(
 app = FastAPI(title="serving-stack", version="wk2")
 
 
-REGISTRY_PATH = os.environ.get("REGISTRY_PATH", "/home/nassir/aidc-bootcamp/aidc-nassir-serving-stack/app/registry.json")
+REGISTRY_PATH = os.environ.get("REGISTRY_PATH", Path(__file__).parent / "registry.json")
 with open(REGISTRY_PATH) as f:
     REGISTRY = json.load(f)
 
 model.eval()
 print("Model ready")
+
+def get_api_key(api_key: str = Security(api_key_header)):
+    expected = os.environ.get("SERVING_API_KEY")
+    if expected is None:
+        raise HTTPException(status_code=500, detail="server API key not configured")
+    if not api_key or api_key != expected:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API Key",
+            headers={"WWW-Authenticate": "API Key"},
+        )
+    return api_key
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -102,7 +116,7 @@ def _generate(input_ids, req: ChatCompletionRequest):
 
 
 @app.post("/v1/chat/completions", response_model=None)
-def chat_completions(req: ChatCompletionRequest):
+def chat_completions(req: ChatCompletionRequest, api_key: str = Depends(get_api_key)):
     if req.model != MODEL_ID:
         raise HTTPException(
             status_code=400,
